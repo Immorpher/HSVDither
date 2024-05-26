@@ -1,0 +1,14 @@
+HardwareShader PostProcess scene
+{
+	Name "hsvdither"
+	Shader "shaders/hsvdither.fp" 330
+	Uniform float hsvd_brightness
+	Uniform float hsvd_saturation
+	Uniform float hsvd_curve
+	Uniform float hsvd_blevels
+	Uniform int hsvd_bdither
+	Uniform float hsvd_slevels
+	Uniform int hsvd_sdither
+	Uniform int hsvd_scale
+	Uniform int timer
+}

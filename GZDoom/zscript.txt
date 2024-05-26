@@ -1,0 +1,35 @@
+version "4.6"
+
+class HSVDitherEventHandler : EventHandler
+{
+	override void UiTick()
+	{
+		PlayerInfo p = players[consoleplayer];
+		if (p)
+		{
+			bool enabled = CVar.GetCVar("gl_hsvdither_enabled", p).GetBool();
+			float hsvd_brightness = CVar.GetCVar("gl_hsvdither_brightness", p).GetFloat();
+			float hsvd_saturation = CVar.GetCVar("gl_hsvdither_saturation", p).GetFloat();
+			float hsvd_curve = CVar.GetCVar("gl_hsvdither_curve", p).GetFloat();
+			float hsvd_blevels = CVar.GetCVar("gl_hsvdither_blevels", p).GetFloat();
+			int hsvd_bdither = CVar.GetCVar("gl_hsvdither_bdither", p).GetInt();
+			float hsvd_slevels = CVar.GetCVar("gl_hsvdither_slevels", p).GetFloat();
+			int hsvd_sdither = CVar.GetCVar("gl_hsvdither_sdither", p).GetInt();
+			int hsvd_scale = CVar.GetCVar("gl_hsvdither_scale", p).GetInt();
+			
+			Shader.SetEnabled(p, "hsvdither", enabled); // enable or disable shader
+			
+			// send in engine varibles to shader
+			Shader.SetUniform1f(p, "hsvdither", "timer", gametic);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_brightness", hsvd_brightness);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_saturation", hsvd_saturation);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_curve", hsvd_curve);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_blevels", hsvd_blevels);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_bdither", hsvd_bdither);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_slevels", hsvd_slevels);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_sdither", hsvd_sdither);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_scale", hsvd_scale);
+		}
+		super.UITick();
+	}
+}
