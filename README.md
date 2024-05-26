@@ -2,9 +2,9 @@
 HSV Dither is a non-linear color boosting, banding and dithering shader. It leaves the hues untouched for good color reproduction while optionally boosting and dithering brightness and saturation.
 
 # Supported Software
-GZDoom - https://zdoom.org/downloads
-FTEQW (OpenGL) - https://fte.triptohell.info/
-ReShade - https://reshade.me/
+GZDoom - https://zdoom.org/downloads  
+FTEQW (OpenGL) - https://fte.triptohell.info/  
+ReShade - https://reshade.me/  
 
 For specific instructions for each softare, refer to the corresponding sub-directory.  
 
