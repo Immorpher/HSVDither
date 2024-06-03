@@ -7,8 +7,8 @@ HardwareShader PostProcess scene
 	Uniform float hsvd_curve
 	Uniform float hsvd_blevels
 	Uniform int hsvd_bdither
-	Uniform float hsvd_slevels
-	Uniform int hsvd_sdither
+	Uniform float hsvd_clevels
+	Uniform int hsvd_cdither
 	Uniform int hsvd_scale
 	Uniform int timer
 }

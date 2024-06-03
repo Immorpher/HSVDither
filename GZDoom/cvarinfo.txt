@@ -1,9 +1,9 @@
 user bool gl_hsvdither_enabled = true;
-user float gl_hsvdither_brightness = 1;
-user float gl_hsvdither_saturation = 1;
-user float gl_hsvdither_curve = 5;
-user float gl_hsvdither_blevels = 8;
-user int gl_hsvdither_bdither = 1;
-user float gl_hsvdither_slevels = 8;
-user int gl_hsvdither_sdither = 1;
-user float gl_hsvdither_scale = 1;
+user float gl_hsvdither_brightness = 20;
+user float gl_hsvdither_saturation = 20;
+user float gl_hsvdither_curve = 2;
+user float gl_hsvdither_blevels = 32;
+user int gl_hsvdither_bdither = 3;
+user float gl_hsvdither_clevels = 16;
+user int gl_hsvdither_cdither = 4;
+user float gl_hsvdither_scale = 2;

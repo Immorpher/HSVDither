@@ -13,8 +13,8 @@ OptionMenu "HSV Dither"
 	Slider		"Banding Curve", "gl_hsvdither_curve", 0.1, 20.0, 0.1
 	Slider		"Brightness Levels", "gl_hsvdither_blevels", 2.0, 64.0, 1.0
 	Option		"Brightness Dither", "gl_hsvdither_bdither", "DitherOpts"
-	Slider		"Saturation Levels", "gl_hsvdither_slevels", 2.0, 64.0, 1.0
-	Option		"Saturation Dither", "gl_hsvdither_sdither", "DitherOpts"
+	Slider		"Color Levels", "gl_hsvdither_clevels", 2.0, 64.0, 1.0
+	Option		"Color Dither", "gl_hsvdither_cdither", "DitherOpts"
 	Slider		"Dither Scale", "gl_hsvdither_scale", 1, 32, 1
 }
 
@@ -29,5 +29,8 @@ OptionValue "DitherOpts"
 	5, "Checker"
 	6, "Magic Square"
 	7, "Grid"
-	8, "None"
+	8, "ILG Noise"
+	9, "Tate"
+	10, "ZigZag"
+	11, "None"
 }

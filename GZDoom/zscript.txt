@@ -13,8 +13,8 @@ class HSVDitherEventHandler : EventHandler
 			float hsvd_curve = CVar.GetCVar("gl_hsvdither_curve", p).GetFloat();
 			float hsvd_blevels = CVar.GetCVar("gl_hsvdither_blevels", p).GetFloat();
 			int hsvd_bdither = CVar.GetCVar("gl_hsvdither_bdither", p).GetInt();
-			float hsvd_slevels = CVar.GetCVar("gl_hsvdither_slevels", p).GetFloat();
-			int hsvd_sdither = CVar.GetCVar("gl_hsvdither_sdither", p).GetInt();
+			float hsvd_clevels = CVar.GetCVar("gl_hsvdither_clevels", p).GetFloat();
+			int hsvd_cdither = CVar.GetCVar("gl_hsvdither_cdither", p).GetInt();
 			int hsvd_scale = CVar.GetCVar("gl_hsvdither_scale", p).GetInt();
 			
 			Shader.SetEnabled(p, "hsvdither", enabled); // enable or disable shader
@@ -26,8 +26,8 @@ class HSVDitherEventHandler : EventHandler
 			Shader.SetUniform1f(p, "hsvdither", "hsvd_curve", hsvd_curve);
 			Shader.SetUniform1f(p, "hsvdither", "hsvd_blevels", hsvd_blevels);
 			Shader.SetUniform1f(p, "hsvdither", "hsvd_bdither", hsvd_bdither);
-			Shader.SetUniform1f(p, "hsvdither", "hsvd_slevels", hsvd_slevels);
-			Shader.SetUniform1f(p, "hsvdither", "hsvd_sdither", hsvd_sdither);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_clevels", hsvd_clevels);
+			Shader.SetUniform1f(p, "hsvdither", "hsvd_cdither", hsvd_cdither);
 			Shader.SetUniform1f(p, "hsvdither", "hsvd_scale", hsvd_scale);
 		}
 		super.UITick();

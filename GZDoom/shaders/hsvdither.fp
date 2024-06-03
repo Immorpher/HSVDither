@@ -1,13 +1,9 @@
 // ---------------------------------------------------------------------
-// About HSV Dither 1.0
+// About HSV Dither 1.1
 
-// HSV Dither is a non-linear color boosting, banding and dithering shader. It leaves the hues untouched for good color reproduction while optionally boosting and dithering brightness and saturation.
+// HSV Dither is a color boosting, banding and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 // See user defined values section to customize this shader and learn more about its capabilities. The effects are enhanced if you pair this with increased pixel sizes.
 
-// Color banding learned from code by SolarLune on this topic: https://blenderartists.org/t/reducing-the-number-of-colors-color-depth/571154
-// Bayer dithering learned from code by hughsk: https://github.com/hughsk/glsl-dither
-// Noise dithering learned from this code: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
-// HSV functions learned from this answer by sam hocevar: https://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
 // GZDoom implementation based on code from Molecicco, IDDQD1337, and proydoha
 // Twitter: https://twitter.com/immorpher64
 // YouTube: https://www.youtube.com/c/Immorpher
@@ -17,16 +13,16 @@
 
 float brightness = 1; // Non-linear brightness boost by boosting the V value of HSV.
 float saturation = 1; // Non-linear saturation boost by boosting the S value of HSV.
-float curve = 1; // Amount to non-linearly skew brightness banding. Higher numbers have smoother darks and band brights more, which is good for dark games.
-float blevels = 15; // Brightness levels plus 1 (black). The lower the number, the more more bands and less brightness levels. 
-int bdither = 3; // Brightness dither: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid dithering, and 8 for none.
-float slevels = 3; // Saturation levels plus 1. The lower the number, the more more bands and less colors used. 
-int sdither = 4; // Saturation dither: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid dithering, and 8 for none.
+float curve = 2; // Amount to non-linearly skew brightness banding. Higher numbers have smoother darks and band brights more, which is good for dark games.
+float blevels = 31; // Brightness levels plus 1 (black). The lower the number, the more more bands and less brightness levels. 
+int bdither = 3; // Brightness dither: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
+float clevels = 15; // Color levels plus 1. The lower the number, the more more bands and less colors used. 
+int cdither = 4; // Color dither: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
 int ditherscale = 2; // Pixel size of the dither. This can be done in combination with an in-engine pixel size setting.
 
 
 // ---------------------------------------------------------------------
-// HSV functions learned from: https://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
+// HSV functions learned from this answer by sam hocevar: https://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
 
 // RGB to HSV
 vec3 rgb2hsv(vec3 c)
@@ -52,43 +48,26 @@ vec3 hsv2rgb(vec3 c)
 // ---------------------------------------------------------------------
 // Dithering functions
 
-// Static noise based dither roughly learned from: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
-float staticnoise(vec2 position){ 
-	float limit = 0.0; // dither on or off
-	vec2 wavenum = vec2(12.9898,78.233); // screen position noise
-	
-	// Get random number based on oscillating sine
-    limit = fract(sin(dot(position,wavenum))*23758.5453);
-	
-	return limit; // return the limit
-}
-
-// Motion noise based dither roughly learned from: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
-float motionnoise(vec2 position){ 
-	float limit = 0.0; // dither on or off
-	vec2 wavenum = vec2(12.9898,28.233); // screen position noise
-	
-	// Alternate oscillations
-	wavenum = wavenum + sin(float(timer)*vec2(34.9898,50.233));
-	
-	// Get random number based on oscillating sine
-    limit = fract(sin(dot(position,wavenum)+float(timer))*13758.5453);
-	
-	return limit; // return limit
-}
-
 // Scanline dithering inspired by bayer style
 float scanline(vec2 position) {
 	int y = int(mod(position.y, 2.0)); // restrict to 2 pixel increments vertically
-	float limit = 0.0; // comparison place holder value
 
 	// define scanline array of 2 values
 	float scanline[2] = float[2](0.333,0.666);
 	
 	// Find and adjust the limit value to scale the dithering
-	limit = scanline[y];
+	return scanline[y]; // return the limit
+}
+
+// Tate (vertical) dithering inspired by scanline
+float tate(vec2 position) {
+	int x = int(mod(position.x, 2.0)); // restrict to 2 pixel increments vertically
+
+	// define tate array of 2 values
+	float tate[2] = float[2](0.333,0.666);
 	
-	return limit; // return the limit
+	// Find and adjust the limit value to scale the dithering
+	return tate[x]; // return the limit
 }
 
 // Checker 2x2 dither inspired by bayer 2x2
@@ -96,15 +75,12 @@ float checker(vec2 position) {
 	int x = int(mod(position.x, 2.0)); // restrict to 2 pixel increments horizontally
 	int y = int(mod(position.y, 2.0)); // restrict to 2 pixel increments vertically
 	int index = x + y * 2; // determine position in Bayer array
-	float limit = 0.0; // comparison place holder value
 
 	// define checker 2x2 array of 4 values
 	float check[4] = float[4](0.333,0.666,0.666,0.333);
 	
 	// Find and adjust the limit value to scale the dithering
-	limit = check[index];
-	
-	return limit; // return the limit
+	return check[index]; // return the limit
 }
 
 // Grid 2x2 dither inspired by bayer 2x2
@@ -112,31 +88,25 @@ float grid2x2(vec2 position) {
 	int x = int(mod(position.x, 2.0)); // restrict to 2 pixel increments horizontally
 	int y = int(mod(position.y, 2.0)); // restrict to 2 pixel increments vertically
 	int index = x + y * 2; // determine position in Bayer array
-	float limit = 0.0; // comparison place holder value
 
 	// define grid 2x2 array of 4 values
 	float grid[4] = float[4](0.75,0.5,0.5,0.25);
 	
 	// Find and adjust the limit value to scale the dithering
-	limit = grid[index];
-	
-	return limit; // return the limit
+	return grid[index]; // return the limit
 }
 
-// Bayer 2x2 dither roughly adapted and corrected from: https://github.com/hughsk/glsl-dither
-float dither2x2(vec2 position) {
+// Bayer 2x2 dither learned from code by hughsk: https://github.com/hughsk/glsl-dither
+float bayer2x2(vec2 position) {
 	int x = int(mod(position.x, 2.0)); // restrict to 2 pixel increments horizontally
 	int y = int(mod(position.y, 2.0)); // restrict to 2 pixel increments vertically
 	int index = x + y * 2; // determine position in Bayer array
-	float limit = 0.0; // comparison place holder value
 
 	// define bayer 2x2 array of 4 values
 	float bayer[4] = float[4](0.2,0.6,0.8,0.4);
 	
 	// Find and adjust the limit value to scale the dithering
-	limit = bayer[index];
-	
-	return limit; // return the limit
+	return bayer[index]; // return the limit
 }
 
 // Magic Square 3x3 dither inspired by https://en.wikipedia.org/wiki/Magic_square
@@ -144,43 +114,74 @@ float magic3x3(vec2 position) {
 	int x = int(mod(position.x, 3.0)); // restrict to 3 pixel increments horizontally
 	int y = int(mod(position.y, 3.0)); // restrict to 3 pixel increments vertically
 	int index = x + y * 3; // determine position in magic square array
-	float limit = 0.0; // comparison place holder value
 	
 	// define magic square 3x3 array of 9 values
 	float magic[9] = float[9](0.2,0.7,0.6,0.9,0.5,0.1,0.4,0.3,0.8);
 		
 	// Find and adjust the limit value to scale the dithering
-	limit = magic[index];
-	
-	return limit; // return the limit
+	return magic[index]; // return the limit
 }
 
-// Bayer 8x8 dither roughly adapted from: https://github.com/hughsk/glsl-dither
-float dither8x8(vec2 position) {
+// ZigZag dither related to magic square
+float zigzag(vec2 position) {
+	int x = int(mod(position.x, 4.0)); // restrict to 4 pixel increments horizontally
+	int y = int(mod(position.y, 4.0)); // restrict to 4 pixel increments vertically
+	int index = x + y * 4; // determine position in diagonal array
+	
+	// define zigzag array of 16 values
+	float ziag[16] = float[16](0.75,0.5,0.25,0.5,0.5,0.75,0.5,0.75,0.25,0.5,0.75,0.5,0.5,0.25,0.5,0.25);
+		
+	// Find and adjust the limit value to scale the dithering
+	return ziag[index]; // return the limit
+}
+
+// Bayer 8x8 dither learned from code by hughsk: https://github.com/hughsk/glsl-dither
+float bayer8x8(vec2 position) {
 	int x = int(mod(position.x, 8.0)); // restrict to 8 pixel increments horizontally
 	int y = int(mod(position.y, 8.0)); // restrict to 8 pixel increments vertically
 	int index = x + y * 8; // determine position in Bayer array
-	float limit = 0.0; // comparison place holder value
-	bvec4 compare = bvec4(0,0,0,0); // boolean vector for comparison of brightness vec4
 	
 	// define bayer 8x8 array of 64 values
 	float bayer[64] = float[64](0.01538461538,0.5076923077,0.1384615385,0.6307692308,0.04615384615,0.5384615385,0.1692307692,0.6615384615,0.7538461538,0.2615384615,0.8769230769,0.3846153846,0.7846153846,0.2923076923,0.9076923077,0.4153846154,0.2,0.6923076923,0.07692307692,0.5692307692,0.2307692308,0.7230769231,0.1076923077,0.6,0.9384615385,0.4461538462,0.8153846154,0.3230769231,0.9692307692,0.4769230769,0.8461538462,0.3538461538,0.06153846154,0.5538461538,0.1846153846,0.6769230769,0.03076923077,0.5230769231,0.1538461538,0.6461538462,0.8,0.3076923077,0.9230769231,0.4307692308,0.7692307692,0.2769230769,0.8923076923,0.4,0.2461538462,0.7384615385,0.1230769231,0.6153846154,0.2153846154,0.7076923077,0.09230769231,0.5846153846,0.9846153846,0.4923076923,0.8615384615,0.3692307692,0.9538461538,0.4615384615,0.8307692308,0.3384615385);
 	
-	// Find and adjust the limit value to scale the dithering
-	limit = bayer[index];
+	return bayer[index]; // return the comparison value
+}
+
+// ILG Noise learned from: http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
+float ilgnoise(vec2 position) {
+	vec2 wavenum = vec2(0.06711056,0.00583715); // screen position noise
 	
-	return limit; // return the limit
+	return fract(52.9829189*dot(wavenum,position)); // return the limit
+}
+
+// Static noise based dither roughly learned from: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
+float staticnoise(vec2 position){ 
+	vec2 wavenum = vec2(78.233,12.9898)+ilgnoise(position); // screen position noise
+	
+	// Get random number based on oscillating sine
+	return fract(sin(dot(position,wavenum))*43758.5453); // return the comparison value
+}
+
+// Motion noise based dither roughly learned from: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
+float motionnoise(vec2 position){ 
+	vec2 wavenum = vec2(78.233,12.9898)+ilgnoise(position); // screen position noise
+	
+	// Alternate oscillations
+	wavenum = wavenum + sin(float(timer)*vec2(34.989854,50.2336357));
+	
+	// Get random number based on oscillating sine
+	return fract(sin(dot(position,wavenum))*43758.5453); // return comparison value
 }
 
 
 // ---------------------------------------------------------------------
 // Banding with addition of dither
 
-// Quantization learned from: https://blenderartists.org/t/reducing-the-number-of-colors-color-depth/571154
+// Quantization learned from code by SolarLune on this topic: https://blenderartists.org/t/reducing-the-number-of-colors-color-depth/571154
 vec4 colround(vec2 position, vec4 color){ // Rounding function
 	vec3 c = rgb2hsv(color.rgb); // Convert to HSV
-	vec2 ditherlimit = vec2(0,0); // saturation and brightness dither probability
-	bvec2 compare = bvec2(0,0); // boolean vector for comparison of dither limit vector
+	vec3 ditherlimit = vec3(0,0,0); // saturation and brightness dither probability
+	bvec3 compare = bvec3(0,0,0); // boolean vector for comparison of dither limit vector
 	
 	// saturation / brightness boost
 	c.yz = atan(c.yz*vec2(saturation,brightness))/atan(vec2(saturation,brightness)); // non-linear scale and normalize back to 1
@@ -189,46 +190,54 @@ vec4 colround(vec2 position, vec4 color){ // Rounding function
 	c.z = atan(c.z*curve)/atan(curve); // non-linear scale the colors before banding	
 	
 	// Multiply the vector by the level value for banding
-	c.yz *= vec2(slevels,blevels);
+	c *= vec3(clevels+1,clevels,blevels); // color levels have +1 since both ends of hue are the same
 	
 	// round colors to bands
-	vec2 cfloor = floor(c.yz); // round down to lowest band
-	vec2 cceil = ceil(c.yz)-cfloor; // round up to higher band
+	vec3 cfloor = floor(c); // round down to lowest band
+	vec3 cceil = ceil(c)-cfloor; // round up to higher band
 	
-	// determine saturation dither probability
-	switch (sdither) {
-		case 0: ditherlimit.x = dither2x2(position); break; // Bayer 2x2 dither
-		case 1: ditherlimit.x = dither8x8(position); break; // Bayer 8x8 dither
+	// determine color dither probability
+	switch (cdither) {
+		case 0: ditherlimit.x = bayer2x2(position); break; // Bayer 2x2 dither
+		case 1: ditherlimit.x = bayer8x8(position); break; // Bayer 8x8 dither
 		case 2: ditherlimit.x = staticnoise(position); break; // Static noise dither
 		case 3: ditherlimit.x = motionnoise(position); break; // Motion dither
 		case 4: ditherlimit.x = scanline(position); break; // Scanline dither
 		case 5: ditherlimit.x = checker(position); break; // Checker dither
 		case 6: ditherlimit.x = magic3x3(position); break; // Magic square dither
 		case 7: ditherlimit.x = grid2x2(position); break; // Grid Dither
-		case 8: ditherlimit.x = 0.5; break; // None
+		case 8: ditherlimit.x = ilgnoise(position); break; // ILG Noise Dither
+		case 9: ditherlimit.x = tate(position); break; // Tate Dither
+		case 10: ditherlimit.x = zigzag(position); break; // ZigZag Dither
+		case 11: ditherlimit.x = 0.5; break; // None
 	}
+	
+	ditherlimit.y = ditherlimit.x; // Hue and saturation have same ditherlimit
 	
 	// determine brightness dither probability
 	switch (bdither) {
-		case 0: ditherlimit.y = dither2x2(position); break; // Bayer 2x2 dither
-		case 1: ditherlimit.y = dither8x8(position); break; // Bayer 8x8 dither
-		case 2: ditherlimit.y = staticnoise(position); break; // Static noise dither
-		case 3: ditherlimit.y = motionnoise(position); break; // Motion dither
-		case 4: ditherlimit.y = scanline(position); break; // Scanline dither
-		case 5: ditherlimit.y = checker(position); break; // Checker dither
-		case 6: ditherlimit.y = magic3x3(position); break; // Magic square dither
-		case 7: ditherlimit.y = grid2x2(position); break; // Grid Dither
-		case 8: ditherlimit.y = 0.5; break; // None
+		case 0: ditherlimit.z = bayer2x2(position); break; // Bayer 2x2 dither
+		case 1: ditherlimit.z = bayer8x8(position); break; // Bayer 8x8 dither
+		case 2: ditherlimit.z = staticnoise(position); break; // Static noise dither
+		case 3: ditherlimit.z = motionnoise(position); break; // Motion dither
+		case 4: ditherlimit.z = scanline(position); break; // Scanline dither
+		case 5: ditherlimit.z = checker(position); break; // Checker dither
+		case 6: ditherlimit.z = magic3x3(position); break; // Magic square dither
+		case 7: ditherlimit.z = grid2x2(position); break; // Grid Dither
+		case 8: ditherlimit.z = ilgnoise(position); break; // ILG Noise Dither
+		case 9: ditherlimit.z = tate(position); break; // Tate Dither
+		case 10: ditherlimit.z = zigzag(position); break; // ZigZag Dither
+		case 11: ditherlimit.z = 0.5; break; // None
 	}
 	
 	// determine which color values to quantize up for dithering
-	compare = greaterThan(c.yz-cfloor,ditherlimit);
+	compare = greaterThan(c-cfloor,ditherlimit);
 	
 	// add dither
-	c.yz = cfloor + cceil*vec2(float(compare.x),float(compare.y));
+	c = cfloor + cceil*vec3(float(compare.x),float(compare.y),float(compare.z));
 	
 	// return back to normal color space
-	c.yz /= vec2(slevels,blevels); // re-normalize back to 0 to 1
+	c /= vec3(clevels+1,clevels,blevels); // re-normalize back to 0 to 1
 	c.z = tan(atan(curve)*c.z)/curve; // Go back to linear brightness space
 	c = hsv2rgb(c); // Convert to RGB
 	
@@ -246,8 +255,8 @@ void main()
 	curve = hsvd_curve; // grab banding curve from GZDoom
 	blevels = hsvd_blevels - 1.0; // grab brightness levels from GZDoom
 	bdither = hsvd_bdither; // grab brightness dither from GZDoom
-	slevels = hsvd_slevels - 1.0; // grab saturation levels from GZDoom
-	sdither = hsvd_sdither; // grab saturation dither from GZDoom
+	clevels = hsvd_clevels - 1.0; // grab saturation levels from GZDoom
+	cdither = hsvd_cdither; // grab saturation dither from GZDoom
 	ditherscale = hsvd_scale; // grab dither scale from GZDoom
 
 
