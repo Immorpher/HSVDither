@@ -1,4 +1,4 @@
-About HSV Dither 1.1
+About HSV Dither 1.2
 ----------------------------------------------
 HSV Dither is a color boosting, banding, and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 
@@ -7,13 +7,13 @@ Installation and Use
 ----------------------------------------------
 To use the shader first install ReShade onto your game/software of choice. Then in the "\reshade-shaders\Shaders\" directory of the program, add the "HSVDither.fx" file. When you load your program, ReShade should also load which will give you instructions on how to set it up. HSVDither.fx will now be one of the options. When selected you will find the following options:
 
-"Brightness Boost" is a non-linear brightness boost by boosting the V value of HSV.
-"Saturation Boost" is a non-linear saturation boost by boosting the S value of HSV.
+"Brightness" is a brightness adjustment via the V value of HSV. A value of one is no change, greater than one increases brightness, and less than one decreases brightness. 
+"Saturation" is a saturation adjustment via the S value of HSV. A value of one is no change, greater than one increases saturation, and less than one decreases saturation.
 "Banding Curve" is the ammount to non-linearly skew brightness banding. Higher numbers have smoother darks and band brights more, which is good for dark games.
 "Brightness Levels" is the number of brightness levels. The lower the number, the more more bands and less brightness levels. 
-"Brightness Dither" is the type of brightness dither to use: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
+"Brightness Dither" is the type of brightness dither to use: 0 for bayer 2x2, 1 for bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, 11 for diagonal, and 12 for none.
 "Color Levels" is the number of color levels. The lower the number, the more more bands and less colors used. 
-"Color Dither" is the type of color dither to use: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
+"Color Dither" is the type of color dither to use: 0 for bayer 2x2, 1 for bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, 11 for diagonal, and 12 for none.
 "Dither Scale" is the pixel size of the dither. This can be done in combination with an in-engine pixel size setting.
 
 

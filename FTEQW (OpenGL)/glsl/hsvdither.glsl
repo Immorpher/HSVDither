@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------
-// About HSV Dither 1.1
+// About HSV Dither 1.2
 
 // HSV Dither is a color boosting, banding and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 // See user defined values section to customize this shader and learn more about its capabilities. The effects are enhanced if you pair this with increased pixel sizes.
@@ -15,13 +15,13 @@
 // ---------------------------------------------------------------------
 // User defined values
 
-!!cvardf r_hsvd_brightness=1 // Non-linear brightness boost by boosting the V value of HSV.
-!!cvardf r_hsvd_saturation=1 // Non-linear saturation boost by boosting the S value of HSV.
+!!cvardf r_hsvd_brightness=2 // Brightness adjustment via the V value of HSV. A value of one is no change, greater than one increases brightness, and less than one decreases brightness. 
+!!cvardf r_hsvd_saturation=2 // Saturation adjustment via the S value of HSV. A value of one is no change, greater than one increases saturation, and less than one decreases saturation.
 !!cvardf r_hsvd_curve=2 // Amount to non-linearly skew brightness banding. Higher numbers have smoother darks and band brights more, which is good for dark games.
-!!cvardf r_hsvd_blevels=31 // Brightness levels plus 1 (black). The lower the number, the more more bands and less brightness levels. 
-!!cvardf r_hsvd_bdither=3 // Brightness dither: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
-!!cvardf r_hsvd_clevels=15 // Color levels plus 1. The lower the number, the more more bands and less colors used. 
-!!cvardf r_hsvd_cdither=4 // Color dither: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
+!!cvardf r_hsvd_blevels=23 // Brightness levels plus 1 (black). The lower the number, the more more bands and less brightness levels. 
+!!cvardf r_hsvd_bdither=4 // Brightness dither: 0 for bayer 2x2, 1 for bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, 11 for diagonal, and 12 for none.
+!!cvardf r_hsvd_clevels=23 // Color levels plus 1. The lower the number, the more more bands and less colors used. 
+!!cvardf r_hsvd_cdither=3 // Color dither: 0 for bayer 2x2, 1 for bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, 11 for diagonal, and 12 for none.
 !!cvardf r_hsvd_scale=2 // Pixel size of the dither. This can be done in combination with an in-engine pixel size setting.
 
 
@@ -176,6 +176,13 @@ float ilgnoise(vec2 position) {
 	return fract(52.9829189*dot(wavenum,position)); // return the limit
 }
 
+// Diagonal dither adapted from ILG Noise
+float diagonal(vec2 position) {
+	vec2 wavenum = vec2(0.2501,-0.1999); // screen position noise
+	
+	return 2*abs(fract(dot(wavenum,position))-0.5); // return the limit
+}
+
 // Static noise based dither roughly learned from: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
 float staticnoise(vec2 position){ 
 	vec2 wavenum = vec2(78.233,12.9898)+ilgnoise(position); // screen position noise
@@ -207,7 +214,17 @@ vec4 colround(vec2 position, vec4 color){ // Rounding function
 	bvec3 compare = bvec3(0,0,0); // boolean vector for comparison of dither limit vector
 	
 	// saturation / brightness boost
-	c.yz = atan(c.yz*vec2(r_hsvd_saturation,r_hsvd_brightness))/atan(vec2(r_hsvd_saturation,r_hsvd_brightness)); // non-linear scale and normalize back to 1
+	if (r_hsvd_saturation > 1) { // saturate
+		c.y = atan(c.y*(r_hsvd_saturation-1))/atan(r_hsvd_saturation-1); // non-linear scale and normalize back to 1	
+	} else { // desaturate
+		c.y *= r_hsvd_saturation;
+	}
+	
+	if (r_hsvd_brightness > 1) { // brighten
+		c.z = atan(c.z*(r_hsvd_brightness-1))/atan(r_hsvd_brightness-1); // non-linear scale and normalize back to 1
+	} else { // darken
+		c.z *= r_hsvd_brightness;
+	}	
 	
 	// apply non-linear brightness banding
 	c.z = atan(c.z*r_hsvd_curve)/atan(r_hsvd_curve); // non-linear scale the colors before banding	
@@ -232,7 +249,8 @@ vec4 colround(vec2 position, vec4 color){ // Rounding function
 		case 8: ditherlimit.x = ilgnoise(position); break; // ILG Noise Dither
 		case 9: ditherlimit.x = tate(position); break; // Tate Dither
 		case 10: ditherlimit.x = zigzag(position); break; // ZigZag Dither
-		case 11: ditherlimit.x = 0.5; break; // None
+		case 11: ditherlimit.x = diagonal(position); break; // Diagonal Dither
+		case 12: ditherlimit.x = 0.5; break; // None
 	}
 	
 	ditherlimit.y = ditherlimit.x; // Hue and saturation have same ditherlimit
@@ -250,7 +268,8 @@ vec4 colround(vec2 position, vec4 color){ // Rounding function
 		case 8: ditherlimit.z = ilgnoise(position); break; // ILG Noise Dither
 		case 9: ditherlimit.z = tate(position); break; // Tate Dither
 		case 10: ditherlimit.z = zigzag(position); break; // ZigZag Dither
-		case 11: ditherlimit.z = 0.5; break; // None
+		case 11: ditherlimit.z = diagonal(position); break; // Diagonal Dither
+		case 12: ditherlimit.z = 0.5; break; // None
 	}
 	
 	// determine which color values to quantize up for dithering

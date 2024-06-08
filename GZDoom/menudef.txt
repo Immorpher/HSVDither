@@ -8,8 +8,8 @@ OptionMenu "HSV Dither"
 {
 	Title		"HSV Dither"
 	Option		"Enabled", "gl_hsvdither_enabled", "OnOff"
-	Slider		"Brightness Boost", "gl_hsvdither_brightness", 1, 100, 1
-	Slider		"Saturation Boost", "gl_hsvdither_saturation", 1, 100, 1
+	Slider		"Brightness", "gl_hsvdither_brightness", 0, 5, 0.1
+	Slider		"Saturation", "gl_hsvdither_saturation", 0, 5, 0.1
 	Slider		"Banding Curve", "gl_hsvdither_curve", 0.1, 20.0, 0.1
 	Slider		"Brightness Levels", "gl_hsvdither_blevels", 2.0, 64.0, 1.0
 	Option		"Brightness Dither", "gl_hsvdither_bdither", "DitherOpts"
@@ -32,5 +32,6 @@ OptionValue "DitherOpts"
 	8, "ILG Noise"
 	9, "Tate"
 	10, "ZigZag"
-	11, "None"
+	11, "Diagonal"
+	12, "None"
 }

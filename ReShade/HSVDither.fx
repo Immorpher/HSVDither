@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------
-// About HSV Dither 1.1
+// About HSV Dither 1.2
 
 // HSV Dither is a color boosting, banding and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 // See user defined values section to customize this shader and learn more about its capabilities. The effects are enhanced if you pair this with increased pixel sizes.
@@ -31,17 +31,17 @@ uniform float Timer < source = "timer"; >;
 
 uniform float brightness < 
 	ui_type = "slider";
-	ui_min = 0.001; ui_max = 10;
-	ui_label = "Brightness Boost";
-	ui_tooltip = "Non-linear brightness boost by boosting the V value of HSV.";
-> = 1;
+	ui_min = 0; ui_max = 10;
+	ui_label = "Brightness";
+	ui_tooltip = "Brightness adjustment via the V value of HSV. A value of one is no change, greater than one increases brightness, and less than one decreases brightness.";
+> = 2;
 
 uniform float saturation < 
 	ui_type = "slider";
-	ui_min = 0.001; ui_max = 10;
-	ui_label = "Saturation Boost";
-	ui_tooltip = "Non-linear saturation boost by boosting the S value of HSV.";
-> = 1;
+	ui_min = 0; ui_max = 10;
+	ui_label = "Saturation";
+	ui_tooltip = "Saturation adjustment via the S value of HSV. A value of one is no change, greater than one increases saturation, and less than one decreases saturation.";
+> = 2;
 
 uniform float curve < 
 	ui_type = "slider";
@@ -55,7 +55,7 @@ uniform int blevels <
 	ui_min = 1; ui_max = 63;
 	ui_label = "Brightness Levels";
 	ui_tooltip = "Brightness levels plus 1 (black). The lower the number, the more more bands and less brightness levels.";
-> = 31;
+> = 23;
 
 uniform int bdither <
 	ui_type = "combo";
@@ -72,15 +72,16 @@ uniform int bdither <
 	           "ILG Noise\0"
 	           "Tate\0"
 	           "ZigZag\0"
+	           "Diagonal\0"
 	           "None\0";
-> = 3;
+> = 4;
 
 uniform int clevels < 
 	ui_type = "slider";
 	ui_min = 1; ui_max = 63;
 	ui_label = "Color Levels";
 	ui_tooltip = "Color levels plus 1. The lower the number, the more more bands and less color levels.";
-> = 15;
+> = 23;
 
 uniform int cdither <
 	ui_type = "combo";
@@ -97,8 +98,9 @@ uniform int cdither <
 	           "ILG Noise\0"
 	           "Tate\0"
 	           "ZigZag\0"
+	           "Diagonal\0"
 	           "None\0";
-> = 4;
+> = 3;
 
 uniform int ditherscale < 
 	ui_type = "slider";
@@ -247,6 +249,13 @@ float ilgnoise(float2 position) {
 	return frac(52.9829189*dot(wavenum,position)); // return the limit
 }
 
+// Diagonal dither adapted from ILG Noise
+float diagonal(float2 position) {
+	float2 wavenum = float2(0.2501,-0.1999); // screen position noise
+	
+	return 2*abs(frac(dot(wavenum,position))-0.5); // return the limit
+}
+
 // Static noise based dither roughly learned from: https://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
 float staticnoise(float2 position){ 
 	float2 wavenum = float2(78.233,12.9898)+ilgnoise(position); // screen position noise
@@ -280,7 +289,17 @@ float3 colround(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_Targ
 	bool3 compare = bool3(0,0,0); // boolean vector for comparison of dither limit
 	
 	// saturation / brightness boost
-	c.yz = atan(c.yz*float2(saturation,brightness))/atan(float2(saturation,brightness)); // non-linear scale and normalize back to 1
+	if (saturation > 1) { // saturate
+		c.y = atan(c.y*(saturation-1))/atan(saturation-1); // non-linear scale and normalize back to 1	
+	} else { // desaturate
+		c.y *= saturation;
+	}
+	
+	if (brightness > 1) { // brighten
+		c.z = atan(c.z*(brightness-1))/atan(brightness-1); // non-linear scale and normalize back to 1
+	} else { // darken
+		c.z *= brightness;
+	}
 	
 	// apply non-linear brightness banding
 	c.z = atan(c.z*curve)/atan(curve); // non-linear scale the colors before banding	
@@ -306,7 +325,8 @@ float3 colround(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_Targ
 		case 8: ditherlimit.x = ilgnoise(position); break; // ILG Noise Dither
 		case 9: ditherlimit.x = tate(position); break; // Tate Dither
 		case 10: ditherlimit.x = zigzag(position); break; // ZigZag Dither
-		case 11: ditherlimit.x = 0.5; break; // None
+		case 11: ditherlimit.x = diagonal(position); break; // Diagonal Dither
+		case 12: ditherlimit.x = 0.5; break; // None
 	}
 	
 	ditherlimit.y = ditherlimit.x; // Hue and saturation have same ditherlimit
@@ -325,7 +345,8 @@ float3 colround(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_Targ
 		case 8: ditherlimit.z = ilgnoise(position); break; // ILG Noise Dither
 		case 9: ditherlimit.z = tate(position); break; // Tate Dither
 		case 10: ditherlimit.z = zigzag(position); break; // ZigZag Dither
-		case 11: ditherlimit.z = 0.5; break; // None
+		case 11: ditherlimit.z = diagonal(position); break; // Diagonal Dither
+		case 12: ditherlimit.z = 0.5; break; // None
 	}
 	
 	// determine which color values to quantize up for dithering

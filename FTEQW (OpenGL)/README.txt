@@ -1,4 +1,4 @@
-About HSV Dither 1.1
+About HSV Dither 1.2
 ----------------------------------------------
 HSV Dither is a color boosting, banding, and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 
@@ -7,13 +7,13 @@ Installation and Use
 ----------------------------------------------
 To install this shader, move the "HSVDither.pk3" file into the "id1" directory within the FTEQW directory. To use this shader, either add "r_postprocshader hsvdither" text to your fte.cfg, autoexec.cfg file, or when the game is loaded open the console with the "'" key and type the command in. This only works with OpenGL rendering with FTEQW. Once the shader is loaded in FTEQW you can use these console variables to cusomize the shader:
 
-r_hsvd_brightness is a non-linear brightness boost by boosting the V value of HSV.
-r_hsvd_saturation is a non-linear saturation boost by boosting the S value of HSV.
+r_hsvd_brightness is a brightness adjustment via the V value of HSV. A value of one is no change, greater than one increases brightness, and less than one decreases brightness. 
+r_hsvd_saturation is a saturation adjustment via the S value of HSV. A value of one is no change, greater than one increases saturation, and less than one decreases saturation.
 r_hsvd_curve is the amount to non-linearly skew brightness banding. Higher numbers have smoother darks and band brights more, which is good for dark games.
 r_hsvd_blevels is the brightness levels plus 1 (black). The lower the number, the more more bands and less brightness levels. 
-r_hsvd_bdither is the type of brightness dither to use: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
+r_hsvd_bdither is the type of brightness dither to use: 0 for bayer 2x2, 1 for bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, 11 for diagonal, and 12 for none.
 r_hsvd_clevels is the number of color levels. The lower the number, the more more bands and less colors used. 
-r_hsvd_cdither is the type of color dither to use: 0 for Bayer 2x2, 1 for Bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, and 11 for none.
+r_hsvd_cdither is the type of color dither to use: 0 for bayer 2x2, 1 for bayer 8x8, 2 for static noise, 3 for motion noise, 4 for scanline, 5 for checker, 6 for magic square, 7 for grid, 8 for interleaved gradient noise, 9 for tate, 10 for zigzag, 11 for diagonal, and 12 for none.
 r_hsvd_scale is the pixel size of the dither. This can be done in combination with an in-engine pixel size setting.
 
 
