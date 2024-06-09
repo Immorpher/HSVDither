@@ -1,4 +1,4 @@
-About HSV Dither 1.2
+About HSV Dither 1.3
 ----------------------------------------------
 HSV Dither is a color boosting, banding, and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 

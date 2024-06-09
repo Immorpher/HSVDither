@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------
-// About HSV Dither 1.2
+// About HSV Dither 1.3
 
 // HSV Dither is a color boosting, banding and dithering shader. It operates on the color and brightness channels independently and non-linearly.
 // See user defined values section to customize this shader and learn more about its capabilities. The effects are enhanced if you pair this with increased pixel sizes.
@@ -174,7 +174,7 @@ float motionnoise(vec2 position){
 	vec2 wavenum = vec2(78.233,12.9898)+ilgnoise(position); // screen position noise
 	
 	// Alternate oscillations
-	wavenum = wavenum + sin(float(timer)*vec2(34.989854,50.2336357));
+	wavenum = wavenum + sin(fract(timer*0.000123456789)*vec2(3498.9854,5023.36357));
 	
 	// Get random number based on oscillating sine
 	return fract(sin(dot(position,wavenum))*43758.5453); // return comparison value
