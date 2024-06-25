@@ -269,7 +269,7 @@ float motionnoise(float2 position){
 	float2 wavenum = float2(78.233,12.9898)+ilgnoise(position); // screen position noise
 	
 	// Alternate oscillations
-	wavenum = wavenum + sin(frac(Timer*0.000123456789)*float2(3498.9854,5023.36357));
+	wavenum = wavenum + sin(frac(float(Timer)*0.000123456789)*float2(3498.9854,5023.36357));
 	
 	// Get random number based on oscillating sine
 	return frac(sin(dot(position,wavenum))*43758.5453); // return comparison value
